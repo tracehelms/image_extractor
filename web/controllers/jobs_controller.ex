@@ -3,11 +3,12 @@ defmodule ImageExtractor.JobsController do
   alias ImageExtractor.Job
   alias ImageExtractor.Site
 
-  def create(conn, params = %{"urls" => urls}) do
+  def create(conn, %{"urls" => urls}) do
     {:ok, job} = Repo.insert(%Job{})
 
     Enum.each(urls, fn(url) ->
-      Repo.insert(%Site{url: url, job_id: job.id, status: "inprogress"})
+      {:ok, site} = Repo.insert(%Site{url: url, job_id: job.id, status: "inprogress"})
+      start_crawl(site.id)
     end)
 
     conn
@@ -29,6 +30,15 @@ defmodule ImageExtractor.JobsController do
     conn
     |> put_status(200)
     |> json(resp)
+  end
+
+  defp start_crawl(site_id) do
+    # TODO this `spawn` is very naive. Need to replace this with a queue that gets pulled from
+    if Mix.env == :test do
+      ImageExtractor.Extractor.start(site_id)
+    else
+      spawn ImageExtractor.Extractor, :start, [site_id]
+    end
   end
 
 end

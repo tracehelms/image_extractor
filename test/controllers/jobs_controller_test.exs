@@ -12,7 +12,7 @@ defmodule ImageExtractor.JobsControllerTest do
   test "checking status of a job", %{conn: conn} do
     {:ok, job} = ImageExtractor.Repo.insert(%ImageExtractor.Job{})
 
-    {:ok, site} = ImageExtractor.Repo.insert(%ImageExtractor.Site{
+    {:ok, _site} = ImageExtractor.Repo.insert(%ImageExtractor.Site{
       job_id: job.id,
       url: "http://google.com/images/warning.png",
       status: "inprogress"
