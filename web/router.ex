@@ -24,5 +24,6 @@ defmodule ImageExtractor.Router do
     pipe_through :api
 
     post "/jobs", JobsController, :create
+    get "/jobs/:id/status", JobsController, :status
   end
 end
