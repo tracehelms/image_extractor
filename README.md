@@ -1,4 +1,5 @@
 # ImageExtractor
+[![Build Status](https://semaphoreci.com/api/v1/tracehelms/image_extractor/branches/master/badge.svg)](https://semaphoreci.com/tracehelms/image_extractor)
 
 To start your Phoenix app:
 

@@ -12,8 +12,8 @@ config :logger, level: :warn
 # Configure your database
 config :image_extractor, ImageExtractor.Repo,
   adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
+  username: System.get_env("DATABASE_POSTGRESQL_USERNAME") || "postgres",
+  password: System.get_env("DATABASE_POSTGRESQL_PASSWORD") || "postgres",
   database: "image_extractor_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
