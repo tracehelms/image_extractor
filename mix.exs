@@ -19,7 +19,7 @@ defmodule ImageExtractor.Mixfile do
   def application do
     [mod: {ImageExtractor, []},
      applications: [:phoenix, :phoenix_html, :cowboy, :logger, :gettext,
-                    :phoenix_ecto, :postgrex]]
+                    :phoenix_ecto, :postgrex, :httpotion]]
   end
 
   # Specifies which paths to compile per environment.
@@ -36,6 +36,7 @@ defmodule ImageExtractor.Mixfile do
      {:phoenix_html, "~> 2.4"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:gettext, "~> 0.9"},
+     {:httpotion, "~> 2.2.0"},
      {:cowboy, "~> 1.0"}]
   end
 
