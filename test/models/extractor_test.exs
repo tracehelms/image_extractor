@@ -1,42 +1,45 @@
 defmodule ImageExtractor.ExtractorTest do
   use ImageExtractor.ModelCase
   alias ImageExtractor.Extractor
+  use ExVCR.Mock
 
-  setup do
-    valid_urls = [
-      ~s{<img href="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png>},
-      ~s{<img href="http://fillmurray.com/200/200.jpg" alt="Mr. Murray">},
-      ~s{<img href="http://placecage.com/200/200.gif" alt="Mr. Cage">}
-    ]
-    invalid_urls = [
-      ~s{<img href="http://fillmurray.com/200/200" alt="Mr. Murray">}
-    ]
+  @valid_images [
+    ~s{<img href="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png>},
+    ~s{<img href="http://fillmurray.com/200/200.jpg" alt="Mr. Murray">},
+    ~s{<img href="http://placecage.com/200/200.gif" alt="Mr. Cage">}
+  ]
+  @invalid_images [
+    ~s{<img href="http://fillmurray.com/200/200" alt="Mr. Murray">}
+  ]
 
-    {:ok, valid_urls: valid_urls, invalid_urls: invalid_urls}
+  setup_all do
+    ExVCR.Config.cassette_library_dir("fixtures/vcr_cassettes")
+    :ok
   end
 
-  test "extract_image_tags will find a single image tag", %{valid_urls: valid_urls} do
-    html = "<div>#{Enum.at(valid_urls, 0)}</div>"
-    assert Extractor.extract_image_tags(html) == [Enum.at(valid_urls, 0)]
+  test "extract_image_tags will find a single image tag" do
+    html = "<div>#{Enum.at(@valid_images, 0)}</div>"
+    assert Extractor.extract_image_tags(html) == [Enum.at(@valid_images, 0)]
   end
 
-  test "extract_image_tags will find a multiple image tags", %{valid_urls: valid_urls} do
-    html = "<div>#{List.to_string(valid_urls)}</div>"
-    assert Extractor.extract_image_tags(html) == valid_urls
+  test "extract_image_tags will find a multiple image tags" do
+    html = "<div>#{List.to_string(@valid_images)}</div>"
+    assert Extractor.extract_image_tags(html) == @valid_images
   end
 
-  test "extract_image_tags only gives back images with filetype gif, jpg, or png", %{valid_urls: valid_urls, invalid_urls: invalid_urls} do
-    html = "<div>#{List.to_string(valid_urls)}#{List.to_string(invalid_urls)}</div>"
-    assert Extractor.extract_image_tags(html) == valid_urls
+  test "extract_image_tags only gives back images with filetype gif, jpg, or png" do
+    html = "<div>#{List.to_string(@valid_images)}#{List.to_string(@invalid_images)}</div>"
+    assert Extractor.extract_image_tags(html) == @valid_images
   end
 
   test "update_site updates the given Site to set status completed" do
     {_, site} = load_job_and_site
-    {:ok, _} = Extractor.update_site(["<img src=\"\">"], site.id)
+    img_tag = "<img src=\"\">"
+    {:ok, _} = Extractor.update_site([img_tag], site.id)
 
     site = Repo.get!(ImageExtractor.Site, site.id)
     assert site.status == "completed"
-    assert site.images == ["<img src=\"\">"]
+    assert site.images == [img_tag]
   end
 
   test "full integration of Extractor via start/1" do

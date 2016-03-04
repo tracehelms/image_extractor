@@ -37,6 +37,7 @@ defmodule ImageExtractor.Mixfile do
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:gettext, "~> 0.9"},
      {:httpotion, "~> 2.2.0"},
+     {:exvcr, "~> 0.7", only: :test},
      {:cowboy, "~> 1.0"}]
   end
 
