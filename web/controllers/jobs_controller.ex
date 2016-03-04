@@ -32,6 +32,23 @@ defmodule ImageExtractor.JobsController do
     |> json(resp)
   end
 
+  def results(conn, %{"id" => id}) do
+    job = Repo.get!(Job, id) |> Repo.preload([:sites])
+
+    results = Enum.map(job.sites, fn(site) ->
+      %{site.url => site.images}
+    end)
+
+    resp = %{
+      id: job.id,
+      results: results
+    }
+
+    conn
+    |> put_status(200)
+    |> json(resp)
+  end
+
   defp start_crawl(site_id) do
     # TODO this `spawn` is very naive. Need to replace this with a queue that gets pulled from
     if Mix.env == :test do

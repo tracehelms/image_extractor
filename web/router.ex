@@ -25,5 +25,6 @@ defmodule ImageExtractor.Router do
 
     post "/jobs", JobsController, :create
     get "/jobs/:id/status", JobsController, :status
+    get "/jobs/:id/results", JobsController, :results
   end
 end

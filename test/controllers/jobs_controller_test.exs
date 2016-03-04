@@ -29,4 +29,27 @@ defmodule ImageExtractor.JobsControllerTest do
       }
     }
   end
+
+  test "checking results of a job", %{conn: conn} do
+    {:ok, job} = ImageExtractor.Repo.insert(%ImageExtractor.Job{})
+
+    {:ok, _site} = ImageExtractor.Repo.insert(%ImageExtractor.Site{
+      job_id: job.id,
+      url: "https://www.google.com",
+      status: "completed",
+      images: ["https://www.google.com/images/warning.png"]
+    })
+
+    conn = get(conn, "/api/jobs/#{job.id}/results")
+    resp = json_response(conn, 200)
+
+    assert resp == %{
+      "id" => job.id,
+      "results" => [
+        %{
+          "https://www.google.com" => ["https://www.google.com/images/warning.png"]
+        }
+      ]
+    }
+  end
 end
