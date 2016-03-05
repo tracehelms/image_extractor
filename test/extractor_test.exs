@@ -85,7 +85,7 @@ defmodule ImageExtractor.ExtractorTest do
 
   test "trying to launch child jobs when at last level sets site status to completed" do
     {_job, site, _url} = load_job_and_site
-    Extractor.launch_child_jobs(["http://google.com"], site.id, 1)
+    Extractor.launch_child_jobs(["http://google.com"], site.id, 2)
 
     site = Repo.get!(ImageExtractor.Site, site.id)
     assert site.status == "completed"
@@ -102,7 +102,8 @@ defmodule ImageExtractor.ExtractorTest do
       assert site.images == [
         "http://test.com/test.png",
         "/images/icons/product/chrome-48.png",
-        "/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png"
+        "/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png",
+        "/finance/f/logo_us-115376669.gif"
       ]
     end
   end
