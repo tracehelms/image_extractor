@@ -40,7 +40,7 @@ defmodule ImageExtractor.Extractor do
   end
 
   def extract_urls(tag_list) do
-    output = Enum.map(tag_list, fn(tag) ->
+    Enum.map(tag_list, fn(tag) ->
       Regex.split(~r{(src="|href=")}r, tag)
       |> Enum.at(1)
       |> String.split("\"")
