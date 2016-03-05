@@ -13,7 +13,7 @@ defmodule ImageExtractor.Extractor do
 
     content
     |> extract_image_tags
-    |> extract_urls
+    |> extract_urls(:qualified)
     |> update_site(site_id)
 
     content
@@ -38,6 +38,16 @@ defmodule ImageExtractor.Extractor do
     |> Enum.filter( &String.contains?(&1, base_url))
   end
 
+  def extract_urls(tag_list, :qualified) do
+    Enum.map(tag_list, fn(tag) ->
+      Regex.scan(~r{https?.*"}r, tag)
+      |> List.to_string
+      |> String.strip(?")
+    end)
+    |> List.flatten
+    |> Enum.reject(&(&1 == ""))
+  end
+
   def extract_urls(tag_list) do
     Enum.map(tag_list, fn(tag) ->
       Regex.split(~r{(src="|href=")}r, tag)
@@ -59,6 +69,7 @@ defmodule ImageExtractor.Extractor do
   end
 
   # this finishes off the process and marks the site status as "complete"
+  # when the level is too high
   def launch_child_jobs(_content, site_id, level) when level > 1 do
     ImageExtractor.Repo.get!(ImageExtractor.Site, site_id)
     |> ImageExtractor.Site.changeset(%{status: "completed"})

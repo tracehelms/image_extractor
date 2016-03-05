@@ -72,6 +72,19 @@ defmodule ImageExtractor.ExtractorTest do
     ]
   end
 
+  test "extract_urls gets only qualified urls from images and anchor tags" do
+    tags = [
+      ~s{<img src="http://test.com/test.png" alt="Test image">},
+      ~s{<a href="http://example.com/example_page">},
+      ~s{<img src="/images/example.jpg">}
+    ]
+
+    assert Extractor.extract_urls(tags, :qualified) == [
+      ~s{http://test.com/test.png},
+      ~s{http://example.com/example_page}
+    ]
+  end
+
   test "update_site only adds urls to the given site" do
     {_job, site, _url} = load_job_and_site
     images = ["http://example.com/example.jpg"]
@@ -101,15 +114,14 @@ defmodule ImageExtractor.ExtractorTest do
       assert site.status == "completed"
       assert site.images == [
         "http://test.com/test.png",
-        "/images/icons/product/chrome-48.png",
-        "/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png",
-        "/finance/f/logo_us-115376669.gif"
+        "https://s-passets-cache-ak0.pinimg.com/webapp/style/app/common/images/inspired-desktop/bg_pasta_grid-9732e3e3.jpg",
+        "https://s-passets-cache-ak0.pinimg.com/webapp/style/app/common/images/inspired-desktop/bg_pasta-d1b3810b.jpg"
       ]
     end
   end
 
   defp load_job_and_site do
-    url = "https://www.google.com"
+    url = "https://www.pinterest.com"
     {:ok, job} = Repo.insert(%ImageExtractor.Job{})
     {:ok, site} = Repo.insert(%ImageExtractor.Site{
       job_id: job.id,
