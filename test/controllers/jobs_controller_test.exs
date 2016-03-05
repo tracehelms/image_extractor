@@ -9,7 +9,7 @@ defmodule ImageExtractor.JobsControllerTest do
 
   test "adding urls to be crawled", %{conn: conn} do
     use_cassette "adding urls to be crawled" do
-      conn = post(conn, "/api/jobs", %{urls: ["https://google.com"]})
+      conn = post(conn, "/jobs", %{urls: ["https://google.com"]})
       resp = json_response(conn, 202)
 
       job = List.last(Repo.all(ImageExtractor.Job))
@@ -26,7 +26,7 @@ defmodule ImageExtractor.JobsControllerTest do
       status: "inprogress"
     })
 
-    conn = get(conn, "/api/jobs/#{job.id}/status")
+    conn = get(conn, "/jobs/#{job.id}/status")
     resp = json_response(conn, 200)
 
     assert resp == %{
@@ -48,7 +48,7 @@ defmodule ImageExtractor.JobsControllerTest do
       images: ["https://www.google.com/images/warning.png"]
     })
 
-    conn = get(conn, "/api/jobs/#{job.id}/results")
+    conn = get(conn, "/jobs/#{job.id}/results")
     resp = json_response(conn, 200)
 
     assert resp == %{

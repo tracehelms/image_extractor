@@ -20,7 +20,7 @@ defmodule ImageExtractor.Router do
   # end
 
   # Other scopes may use custom stacks.
-  scope "/api", ImageExtractor do
+  scope "/", ImageExtractor do
     pipe_through :api
 
     post "/jobs", JobsController, :create
