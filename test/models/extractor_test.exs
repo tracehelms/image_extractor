@@ -3,57 +3,9 @@ defmodule ImageExtractor.ExtractorTest do
   alias ImageExtractor.Extractor
   use ExVCR.Mock
 
-  @valid_images [
-    ~s{<img href="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png>},
-    ~s{<img href="http://fillmurray.com/200/200.jpg" alt="Mr. Murray">},
-    ~s{<img href="http://placecage.com/200/200.gif" alt="Mr. Cage">}
-  ]
-  @invalid_images [
-    ~s{<img href="http://fillmurray.com/200/200" alt="Mr. Murray">}
-  ]
-
   setup_all do
     ExVCR.Config.cassette_library_dir("fixture/vcr_cassettes")
     :ok
-  end
-
-  test "extract_image_tags will find a single image tag" do
-    html = "<div>#{Enum.at(@valid_images, 0)}</div>"
-    assert Extractor.extract_image_tags(html) == [Enum.at(@valid_images, 0)]
-  end
-
-  test "extract_image_tags will find a multiple image tags" do
-    html = "<div>#{List.to_string(@valid_images)}</div>"
-    assert Extractor.extract_image_tags(html) == @valid_images
-  end
-
-  test "extract_image_tags only gives back images with filetype gif, jpg, or png" do
-    html = "<div>#{List.to_string(@valid_images)}#{List.to_string(@invalid_images)}</div>"
-    assert Extractor.extract_image_tags(html) == @valid_images
-  end
-
-  test "update_site updates the given Site to set status completed" do
-    {_, site} = load_job_and_site
-    img_tag = "<img src=\"\">"
-    {:ok, _} = Extractor.update_site([img_tag], site.id)
-
-    site = Repo.get!(ImageExtractor.Site, site.id)
-    assert site.status == "completed"
-    assert site.images == [img_tag]
-  end
-
-  test "full integration of Extractor via start/1" do
-    use_cassette "get_html! happy test" do
-      {_, site} = load_job_and_site
-      {:ok, _} = Extractor.start(site.id)
-      site = Repo.get!(ImageExtractor.Site, site.id)
-
-      assert site.status == "completed"
-      assert site.images == [
-        "<img src=\"/images/icons/product/chrome-48.png\">",
-        "<img alt=\"Google\" height=\"92\" src=\"/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png\" style=\"padding:28px 0 14px\" width=\"272\" id=\"hplogo\" onload=\"window.lol&&lol()\">"
-      ]
-    end
   end
 
   test "get_html! gets html content from the given url" do
@@ -64,17 +16,106 @@ defmodule ImageExtractor.ExtractorTest do
     end
   end
 
+  test "extract_image_tags will find a single image tag" do
+    img_tag = ~s{<img src="http://test.com/test.png" alt="Test image">}
+    html = "<div>#{img_tag}</div>"
+    assert Extractor.extract_image_tags(html) == [img_tag]
+  end
+
+  test "extract_image_tags will find a multiple image tags" do
+    img_tags = [
+      ~s{<img src="http://test.com/test.png" alt="Test image">},
+      ~s{<img src="http://example.com/example.png" alt="Example image">}
+    ]
+    html = "<div>#{List.to_string(img_tags)}</div>"
+    assert Extractor.extract_image_tags(html) == img_tags
+  end
+
+  test "extract_image_tags only gives back images with filetype gif, jpg, or png" do
+    img_tags = [
+      ~s{<img src="http://test.com/test" alt="Bad image">},
+      ~s{<img src="http://example.com/example.png" alt="Example image">}
+    ]
+    html = "<div>#{List.to_string(img_tags)}</div>"
+    assert Extractor.extract_image_tags(html) == [Enum.at(img_tags, 1)]
+  end
+
+  test "extract_anchor_tags gets anchor tags from html" do
+    a_tags = [
+      ~s{<a href="http://test.com">},
+      ~s{<a href="http://test.com/test_page.html">}
+    ]
+    html = "<div>#{a_tags}</div>"
+    assert Extractor.extract_anchor_tags(html, "http://test.com") == a_tags
+  end
+
+  test "extract_anchor_tags only includes child pages on same domain" do
+    a_tags = [
+      ~s{<a href="http://test.com/test_page">},
+      ~s{<a href="http://example.com">}
+    ]
+    html = "<div>#{a_tags}</div>"
+    assert Extractor.extract_anchor_tags(html, "http://test.com") == [Enum.at(a_tags, 0)]
+  end
+
+  test "extract_urls gets urls from images and anchor tags" do
+    tags = [
+      ~s{<img src="http://test.com/test.png" alt="Test image">},
+      ~s{<a href="http://example.com/example_page">}
+    ]
+
+    assert Extractor.extract_urls(tags) == [
+      ~s{http://test.com/test.png},
+      ~s{http://example.com/example_page}
+    ]
+  end
+
+  test "update_site only adds urls to the given site" do
+    {_job, site, _url} = load_job_and_site
+    images = ["http://example.com/example.jpg"]
+    original_images = site.images
+
+    {:ok, _} = Extractor.update_site(images, site.id)
+
+    site = Repo.get!(ImageExtractor.Site, site.id)
+    assert site.images == original_images ++ images
+  end
+
+  test "trying to launch child jobs when at last level sets site status to completed" do
+    {_job, site, _url} = load_job_and_site
+    Extractor.launch_child_jobs(["http://google.com"], site.id, 1)
+
+    site = Repo.get!(ImageExtractor.Site, site.id)
+    assert site.status == "completed"
+  end
+
+  # test "full integration of Extractor via start_crawl" do
+  #   use_cassette "crawl integration happy test" do
+  #     {_job, site, url} = load_job_and_site
+  #     Extractor.start_crawl(url, site.id, 0)
+  #
+  #     site = Repo.get!(ImageExtractor.Site, site.id)
+  #
+  #     assert site.status == "completed"
+  #     assert site.images == [
+  #       "<img src=\"/images/icons/product/chrome-48.png\">",
+  #       "<img alt=\"Google\" height=\"92\" src=\"/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png\" style=\"padding:28px 0 14px\" width=\"272\" id=\"hplogo\" onload=\"window.lol&&lol()\">"
+  #     ]
+  #   end
+  # end
 
 
   defp load_job_and_site do
+    url = "https://www.google.com"
     {:ok, job} = Repo.insert(%ImageExtractor.Job{})
     {:ok, site} = Repo.insert(%ImageExtractor.Site{
       job_id: job.id,
-      url: "https://www.google.com",
-      status: "inprogress"
+      url: url,
+      status: "inprogress",
+      images: ["http://test.com/test.png"]
     })
 
-    {job, site}
+    {job, site, url}
   end
 
 end

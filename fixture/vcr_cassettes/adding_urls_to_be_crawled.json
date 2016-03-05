@@ -1,0 +1,30 @@
+[
+  {
+    "request": {
+      "body": "",
+      "headers": [],
+      "method": "get",
+      "options": [],
+      "request_body": "",
+      "url": "https://google.com"
+    },
+    "response": {
+      "body": "<HTML><HEAD><meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<TITLE>301 Moved</TITLE></HEAD><BODY>\n<H1>301 Moved</H1>\nThe document has moved\n<A HREF=\"https://www.google.com/\">here</A>.\r\n</BODY></HTML>\r\n",
+      "headers": {
+        "Location": "https://www.google.com/",
+        "Content-Type": "text/html; charset=UTF-8",
+        "Date": "Sat, 05 Mar 2016 18:31:15 GMT",
+        "Expires": "Mon, 04 Apr 2016 18:31:15 GMT",
+        "Cache-Control": "public, max-age=2592000",
+        "Server": "gws",
+        "Content-Length": "220",
+        "X-XSS-Protection": "1; mode=block",
+        "X-Frame-Options": "SAMEORIGIN",
+        "Alternate-Protocol": "443:quic,p=1",
+        "Alt-Svc": "quic=\":443\"; ma=2592000; v=\"30,29,28,27,26,25\""
+      },
+      "status_code": 301,
+      "type": "ok"
+    }
+  }
+]

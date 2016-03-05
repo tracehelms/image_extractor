@@ -1,11 +1,26 @@
 defmodule ImageExtractor.Extractor do
 
-  def start(site_id) do
-    site = ImageExtractor.Repo.get!(ImageExtractor.Site, site_id)
-    site.url
-    |> get_html!
+  def start_crawl(url, site_id, level) do
+    if Mix.env == :test do
+      crawl(url, site_id, level)
+      :ok
+    else
+      spawn ImageExtractor.Extractor, :crawl, [url, site_id, level]
+    end
+  end
+
+  def crawl(url, site_id, level) do
+    content = get_html!(url)
+
+    content
     |> extract_image_tags
-    |> update_site(site.id)
+    |> extract_urls
+    |> update_site(site_id)
+
+    content
+    |> extract_anchor_tags(url)
+    |> extract_urls
+    |> launch_child_jobs(site_id, level + 1)
   end
 
   def get_html!(url) do
@@ -18,9 +33,39 @@ defmodule ImageExtractor.Extractor do
     |> Enum.filter( &String.match?(&1, ~r{\.(jpg|png|gif)}) )
   end
 
+  def extract_anchor_tags(content, base_url) do
+    Regex.scan(~r{<a.*>}r, content)
+    |> List.flatten
+    |> Enum.filter( &String.contains?(&1, base_url))
+  end
+
+  def extract_urls(tag_list) do
+    Enum.map(tag_list, fn(tag) ->
+      Regex.run(~r{https?.*"}r, tag)
+      |> List.to_string
+      |> String.strip(?")
+    end)
+    |> List.flatten
+  end
+
   def update_site(images, site_id) do
-    ImageExtractor.Repo.get!(ImageExtractor.Site, site_id)
-    |> ImageExtractor.Site.changeset(%{status: "completed", images: images})
+    site = ImageExtractor.Repo.get!(ImageExtractor.Site, site_id)
+
+    site
+    |> ImageExtractor.Site.changeset(%{images: site.images ++ images})
     |> ImageExtractor.Repo.update
   end
+
+  # this finishes off the process and marks the site status as "complete"
+  def launch_child_jobs(_content, site_id, level) when level >= 1 do
+    ImageExtractor.Repo.get!(ImageExtractor.Site, site_id)
+    |> ImageExtractor.Site.changeset(%{status: "completed"})
+    |> ImageExtractor.Repo.update
+  end
+
+  def launch_child_jobs(urls, site_id, level) do
+    urls
+    |> Enum.each(fn(url) -> start_crawl(url, site_id, level) end)
+  end
+
 end

@@ -1,12 +1,20 @@
 defmodule ImageExtractor.JobsControllerTest do
   use ImageExtractor.ConnCase
+  use ExVCR.Mock
+
+  setup_all do
+    ExVCR.Config.cassette_library_dir("fixture/vcr_cassettes")
+    :ok
+  end
 
   test "adding urls to be crawled", %{conn: conn} do
-    conn = post(conn, "/api/jobs", %{urls: ["https://google.com"]})
-    resp = json_response(conn, 202)
+    use_cassette "adding urls to be crawled" do
+      conn = post(conn, "/api/jobs", %{urls: ["https://google.com"]})
+      resp = json_response(conn, 202)
 
-    job = List.last(Repo.all(ImageExtractor.Job))
-    assert resp == %{"id" => job.id}
+      job = List.last(Repo.all(ImageExtractor.Job))
+      assert resp == %{"id" => job.id}
+    end
   end
 
   test "checking status of a job", %{conn: conn} do
