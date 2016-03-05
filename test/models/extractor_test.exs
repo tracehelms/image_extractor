@@ -61,12 +61,14 @@ defmodule ImageExtractor.ExtractorTest do
   test "extract_urls gets urls from images and anchor tags" do
     tags = [
       ~s{<img src="http://test.com/test.png" alt="Test image">},
-      ~s{<a href="http://example.com/example_page">}
+      ~s{<a href="http://example.com/example_page">},
+      ~s{<img src="/images/example.jpg">}
     ]
 
     assert Extractor.extract_urls(tags) == [
       ~s{http://test.com/test.png},
-      ~s{http://example.com/example_page}
+      ~s{http://example.com/example_page},
+      ~s{/images/example.jpg}
     ]
   end
 
@@ -89,21 +91,21 @@ defmodule ImageExtractor.ExtractorTest do
     assert site.status == "completed"
   end
 
-  # test "full integration of Extractor via start_crawl" do
-  #   use_cassette "crawl integration happy test" do
-  #     {_job, site, url} = load_job_and_site
-  #     Extractor.start_crawl(url, site.id, 0)
-  #
-  #     site = Repo.get!(ImageExtractor.Site, site.id)
-  #
-  #     assert site.status == "completed"
-  #     assert site.images == [
-  #       "<img src=\"/images/icons/product/chrome-48.png\">",
-  #       "<img alt=\"Google\" height=\"92\" src=\"/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png\" style=\"padding:28px 0 14px\" width=\"272\" id=\"hplogo\" onload=\"window.lol&&lol()\">"
-  #     ]
-  #   end
-  # end
+  test "full integration of Extractor via start_crawl" do
+    use_cassette "crawl integration happy test" do
+      {_job, site, url} = load_job_and_site
+      Extractor.start_crawl(url, site.id, 0)
 
+      site = Repo.get!(ImageExtractor.Site, site.id)
+
+      assert site.status == "completed"
+      assert site.images == [
+        "http://test.com/test.png",
+        "/images/icons/product/chrome-48.png",
+        "/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png"
+      ]
+    end
+  end
 
   defp load_job_and_site do
     url = "https://www.google.com"

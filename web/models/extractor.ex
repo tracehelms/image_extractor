@@ -28,26 +28,28 @@ defmodule ImageExtractor.Extractor do
   end
 
   def extract_image_tags(content) do
-    Regex.scan(~r{<img.*>}r, content)
+    Regex.scan(~r{<img.*src=.*>}r, content)
     |> List.flatten
     |> Enum.filter( &String.match?(&1, ~r{\.(jpg|png|gif)}) )
   end
 
   def extract_anchor_tags(content, base_url) do
-    Regex.scan(~r{<a.*>}r, content)
+    Regex.scan(~r{<a.*href=.*>}r, content)
     |> List.flatten
     |> Enum.filter( &String.contains?(&1, base_url))
   end
 
   def extract_urls(tag_list) do
-    Enum.map(tag_list, fn(tag) ->
-      Regex.run(~r{https?.*"}r, tag)
-      |> List.to_string
-      |> String.strip(?")
+    output = Enum.map(tag_list, fn(tag) ->
+      Regex.split(~r{(src="|href=")}r, tag)
+      |> Enum.at(1)
+      |> String.split("\"")
+      |> Enum.at(0)
     end)
     |> List.flatten
   end
 
+  def update_site([], _), do: nil
   def update_site(images, site_id) do
     site = ImageExtractor.Repo.get!(ImageExtractor.Site, site_id)
 
