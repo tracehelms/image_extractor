@@ -10,17 +10,18 @@ defmodule ImageExtractor.Extractor do
 
   def crawl(url, site_id, level) do
     content = get_html!(url)
+    site = ImageExtractor.Repo.get!(ImageExtractor.Site, site_id)
 
     content
     |> extract_image_tags
     |> extract_urls
-    |> qualify_urls(url)
+    |> qualify_urls(site.url)
     |> update_site(site_id)
 
     content
     |> extract_anchor_tags(url)
     |> extract_urls
-    |> qualify_urls(url)
+    |> qualify_urls(site.url)
     |> launch_child_jobs(site_id, level + 1)
   end
 

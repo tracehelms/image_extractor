@@ -115,10 +115,7 @@ defmodule ImageExtractor.ExtractorTest do
         "http://test.com/test.png",
         "https://www.google.com/images/icons/product/chrome-48.png",
         "https://www.google.com/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png",
-        "https://www.google.com/webhp?tab=ww/images/icons/product/chrome-48.png",
-        "https://www.google.com/webhp?tab=ww/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png",
-        "https://www.google.com/imghp?hl=en&tab=wi/images/icons/product/chrome-48.png",
-        "https://www.google.com/finance?tab=we/finance/f/logo_us-115376669.gif"
+        "https://www.google.com/finance/f/logo_us-115376669.gif"
       ]
     end
   end
