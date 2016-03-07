@@ -72,16 +72,15 @@ defmodule ImageExtractor.ExtractorTest do
     ]
   end
 
-  test "extract_urls gets only qualified urls from images and anchor tags" do
-    tags = [
-      ~s{<img src="http://test.com/test.png" alt="Test image">},
-      ~s{<a href="http://example.com/example_page">},
-      ~s{<img src="/images/example.jpg">}
+  test "qualify_urls qualifies relative URLs and leaves qualified ones alone" do
+    image_urls = [
+      ~s{http://test.com/test.png},
+      ~s{/images/example_image.gif}
     ]
 
-    assert Extractor.extract_urls(tags, :qualified) == [
+    assert Extractor.qualify_urls(image_urls, "http://example.com") == [
       ~s{http://test.com/test.png},
-      ~s{http://example.com/example_page}
+      ~s{http://example.com/images/example_image.gif}
     ]
   end
 
@@ -114,14 +113,18 @@ defmodule ImageExtractor.ExtractorTest do
       assert site.status == "completed"
       assert site.images == [
         "http://test.com/test.png",
-        "https://s-passets-cache-ak0.pinimg.com/webapp/style/app/common/images/inspired-desktop/bg_pasta_grid-9732e3e3.jpg",
-        "https://s-passets-cache-ak0.pinimg.com/webapp/style/app/common/images/inspired-desktop/bg_pasta-d1b3810b.jpg"
+        "https://www.google.com/images/icons/product/chrome-48.png",
+        "https://www.google.com/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png",
+        "https://www.google.com/webhp?tab=ww/images/icons/product/chrome-48.png",
+        "https://www.google.com/webhp?tab=ww/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png",
+        "https://www.google.com/imghp?hl=en&tab=wi/images/icons/product/chrome-48.png",
+        "https://www.google.com/finance?tab=we/finance/f/logo_us-115376669.gif"
       ]
     end
   end
 
   defp load_job_and_site do
-    url = "https://www.pinterest.com"
+    url = "https://www.google.com"
     {:ok, job} = Repo.insert(%ImageExtractor.Job{})
     {:ok, site} = Repo.insert(%ImageExtractor.Site{
       job_id: job.id,

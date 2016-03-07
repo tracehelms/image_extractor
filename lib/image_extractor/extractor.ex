@@ -13,12 +13,14 @@ defmodule ImageExtractor.Extractor do
 
     content
     |> extract_image_tags
-    |> extract_urls(:qualified)
+    |> extract_urls
+    |> qualify_urls(url)
     |> update_site(site_id)
 
     content
     |> extract_anchor_tags(url)
     |> extract_urls
+    |> qualify_urls(url)
     |> launch_child_jobs(site_id, level + 1)
   end
 
@@ -38,16 +40,6 @@ defmodule ImageExtractor.Extractor do
     |> Enum.filter( &String.contains?(&1, base_url))
   end
 
-  def extract_urls(tag_list, :qualified) do
-    Enum.map(tag_list, fn(tag) ->
-      Regex.scan(~r{https?.*"}r, tag)
-      |> List.to_string
-      |> String.strip(?")
-    end)
-    |> List.flatten
-    |> Enum.reject(&(&1 == ""))
-  end
-
   def extract_urls(tag_list) do
     Enum.map(tag_list, fn(tag) ->
       Regex.split(~r{(src="|href=")}r, tag)
@@ -56,6 +48,15 @@ defmodule ImageExtractor.Extractor do
       |> Enum.at(0)
     end)
     |> List.flatten
+  end
+
+  def qualify_urls(image_urls, page_url) do
+    Enum.map(image_urls, fn(image_url) ->
+      case String.match?(image_url, ~r{https?}) do
+        true -> image_url
+        false -> page_url <> image_url
+      end
+    end)
   end
 
   def update_site([], _), do: nil
