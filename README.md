@@ -44,12 +44,14 @@ Response
 ```
 HTTP/1.1 202 Accepted
 ...
-{"id":11}
+{
+  "id":12
+}
 ```
 
 #### Checking Status Of A Job
 Request
-`$ curl -i -H "Content-Type: application/json" http://image-extractor.herokuapp.com/jobs/11/status`
+`$ curl -i -H "Content-Type: application/json" http://image-extractor.herokuapp.com/jobs/12/status`
 
 Response
 ```
@@ -60,13 +62,13 @@ HTTP/1.1 200 OK
     "inprogress":0,
     "completed":2
   },
-  "id":11
+  "id":12
 }
 ```
 
 #### Checking Results Of A Job
 Request
-`$ curl -i -H "Content-Type: application/json" http://image-extractor.herokuapp.com/jobs/11/results`
+`$ curl -i -H "Content-Type: application/json" http://image-extractor.herokuapp.com/jobs/12/results`
 
 Response
 ```
@@ -77,17 +79,13 @@ HTTP/1.1 200 OK
     "https://www.google.com":[
       "https://www.google.com/images/icons/product/chrome-48.png",
       "https://www.google.com/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png",
-      "https://www.google.com/webhp?tab=ww/images/icons/product/chrome-48.png",
-      "https://www.google.com/webhp?tab=ww/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png",
-      "https://www.google.com/finance?tab=we/finance/f/logo_us-115376669.gif"
+      "https://www.google.com/finance/f/logo_us-115376669.gif"
     ],
     "http://tracehelms.com":[
       "http://tracehelms.com/assets/images/trace-head.jpg",
-      "http://tracehelms.com/posts/coming-along#disqus_thread/assets/images/trace-head.jpg",
-      "http://tracehelms.com/posts/pattern-matching-in-elixir#disqus_thread/assets/images/trace-head.jpg"
     ]
   },
-  "id":11
+  "id":12
 }
 ```
 
