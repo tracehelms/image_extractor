@@ -53,11 +53,9 @@ defmodule ImageExtractor.JobsControllerTest do
 
     assert resp == %{
       "id" => job.id,
-      "results" => [
-        %{
-          "https://www.google.com" => ["https://www.google.com/images/warning.png"]
-        }
-      ]
+      "results" => %{
+        "https://www.google.com" => ["https://www.google.com/images/warning.png"]
+      }
     }
   end
 end

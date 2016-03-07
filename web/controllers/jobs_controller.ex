@@ -35,8 +35,8 @@ defmodule ImageExtractor.JobsController do
   def results(conn, %{"id" => id}) do
     job = Repo.get!(Job, id) |> Repo.preload([:sites])
 
-    results = Enum.map(job.sites, fn(site) ->
-      %{site.url => site.images}
+    results = Enum.reduce(job.sites, %{}, fn(site, result) ->
+      Map.put(result, site.url, site.images)
     end)
 
     resp = %{
