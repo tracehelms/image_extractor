@@ -13,11 +13,11 @@ defmodule ImageExtractor.Router do
     plug :accepts, ["json"]
   end
 
-  # scope "/", ImageExtractor do
-  #   pipe_through :browser # Use the default browser stack
-  #
-  #   get "/", PageController, :index
-  # end
+  scope "/", ImageExtractor do
+    pipe_through :browser # Use the default browser stack
+
+    get "/", PageController, :index
+  end
 
   # Other scopes may use custom stacks.
   scope "/", ImageExtractor do
