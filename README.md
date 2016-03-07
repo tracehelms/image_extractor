@@ -15,7 +15,7 @@ The `lib/image_extractor/extractor.ex` file is where the bulk of the business lo
 ### Phoenix & Elixir
 Phoenix and Elixir are pretty new technologies but are very performant. I've been trying to engross myself with Elixir and learn about it, so that's the main reason I chose this language. The ecosystem is still fairly nascent and that gave me a few troubles. I think this would have been easier with Rails and Sidekiq (or similar library). Still, I learned quite a bit and I do think that this implementation is more performant.
 
-### Handling 301 Redirect
+### Handling 301 Redirects
 When crawling a page, if the response is a 301 Redirect, I decided not to continue down that path and crawl it. This is an easy thing to change though. In the `lib/image_extractor/extractor.ex#get_html!` function, you can check if the response if a 301 and then crawl that page instead.
 
 ### Threads For Concurrent Crawling
@@ -29,7 +29,7 @@ In Elixir, it's common to let threads crash if they are supervised. We would, ho
 ### Improvements
 - Error Handling: This wouldn't be a huge task, but would certainly need to be done before considering this production-ready.
 - 301 Redirects: It might be preferred to follow 301 redirects and crawl those pages. As mentioned above, the upgrade path is relatively straight-forward.
-- Marking Site's status as completed: Right now, every thread that is over the limit will make a database call to update the given Site's status to completed. This really only needs to happen once.
+- Marking Site's status as completed: The `Site` object's status gets marked as complete when a crawl past the second level is spawned. Because there is usually more than 1 third level page, this operation happens multiple times. This results in multiple redundant saves to the database. This only needs to happen once.
 - Redis / ETS: Instead of spawning threads to crawl each page, we could add the pages to a queue and pull off of that queue. Something like Redis could be used here. Elixir also has something called Elixir Term Storage (ETS) which we could store our queue in.
 
 ## Usage
@@ -38,7 +38,9 @@ This app is deployed to: [http://image-extractor.herokuapp.com](http://image-ext
 ### Interacting via cURL
 #### Creating A Job
 Request
-`$ curl -i -X POST -H "Content-Type: application/json" -d '{"urls": ["http://tracehelms.com", "https://www.google.com"]}' http://image-extractor.herokuapp.com/jobs/`
+```
+$ curl -i -X POST -H "Content-Type: application/json" -d '{"urls": ["http://tracehelms.com", "https://www.google.com"]}' http://image-extractor.herokuapp.com/jobs/`
+```
 
 Response
 ```
@@ -51,7 +53,9 @@ HTTP/1.1 202 Accepted
 
 #### Checking Status Of A Job
 Request
-`$ curl -i -H "Content-Type: application/json" http://image-extractor.herokuapp.com/jobs/12/status`
+```
+$ curl -i -H "Content-Type: application/json" http://image-extractor.herokuapp.com/jobs/12/status
+```
 
 Response
 ```
@@ -68,7 +72,9 @@ HTTP/1.1 200 OK
 
 #### Checking Results Of A Job
 Request
-`$ curl -i -H "Content-Type: application/json" http://image-extractor.herokuapp.com/jobs/12/results`
+```
+$ curl -i -H "Content-Type: application/json" http://image-extractor.herokuapp.com/jobs/12/results
+```
 
 Response
 ```
@@ -99,3 +105,6 @@ HTTP/1.1 200 OK
 - Start Phoenix server with `$ mix phoenix.server`
 
 The server is now running at [`localhost:4000`](http://localhost:4000). Press `Ctrl + C` twice to stop the server.
+
+### Running Tests
+You can run tests in Elixir (and Phoenix) with: `$ mix test`.
