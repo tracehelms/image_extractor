@@ -71,8 +71,8 @@ defmodule ImageExtractor.Extractor do
   end
 
   # this finishes off the process and marks the site status as "complete"
-  # when the level is too high
-  def launch_child_jobs(_content, site_id, level) when level > 1 do
+  # when the level is too high or when there aren't any more URLs to crawl
+  def launch_child_jobs(urls, site_id, level) when level > 1 or urls == [] do
     ImageExtractor.Repo.get!(ImageExtractor.Site, site_id)
     |> ImageExtractor.Site.changeset(%{status: "completed"})
     |> ImageExtractor.Repo.update

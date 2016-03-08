@@ -120,8 +120,22 @@ defmodule ImageExtractor.ExtractorTest do
     end
   end
 
-  defp load_job_and_site do
-    url = "https://www.google.com"
+  test "full integration of empty page" do
+    use_cassette "crawl integration empty page test" do
+      {_job, site, url} = load_job_and_site("https://scraper.ngrok.io/basic0.html")
+      Extractor.start_crawl(url, site.id, 0)
+
+      site = Repo.get!(ImageExtractor.Site, site.id)
+
+      assert site.status == "completed"
+      assert site.images == [
+        "http://test.com/test.png"
+      ]
+    end
+  end
+
+  defp load_job_and_site(url \\ "https://www.google.com") do
+    url = url
     {:ok, job} = Repo.insert(%ImageExtractor.Job{})
     {:ok, site} = Repo.insert(%ImageExtractor.Site{
       job_id: job.id,
