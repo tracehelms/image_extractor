@@ -75,12 +75,20 @@ defmodule ImageExtractor.ExtractorTest do
   test "qualify_urls qualifies relative URLs and leaves qualified ones alone" do
     image_urls = [
       ~s{http://test.com/test.png},
-      ~s{/images/example_image.gif}
+      ~s{/images/example_image.gif},
+      ~s{//images.com/example_image.gif}
     ]
 
-    assert Extractor.qualify_urls(image_urls, "http://example.com") == [
+    assert Extractor.qualify_urls(image_urls, "http://example.com/") == [
       ~s{http://test.com/test.png},
-      ~s{http://example.com/images/example_image.gif}
+      ~s{http://example.com/images/example_image.gif},
+      ~s{http://images.com/example_image.gif}
+    ]
+
+    assert Extractor.qualify_urls(image_urls, "https://example.com/") == [
+      ~s{http://test.com/test.png},
+      ~s{https://example.com/images/example_image.gif},
+      ~s{https://images.com/example_image.gif}
     ]
   end
 

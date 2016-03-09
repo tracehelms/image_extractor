@@ -52,10 +52,20 @@ defmodule ImageExtractor.Extractor do
   end
 
   def qualify_urls(image_urls, page_url) do
+    is_https = String.match?(page_url, ~r{https})
+
     Enum.map(image_urls, fn(image_url) ->
-      case String.match?(image_url, ~r{https?}) do
-        true -> image_url
-        false -> page_url <> image_url
+      cond do
+        String.match?(image_url, ~r{https?}) ->
+          image_url
+        Enum.take(String.to_char_list(image_url), 2) == '//' ->
+          if is_https do
+            "https:" <> image_url
+          else
+            "http:" <> image_url
+          end
+        true ->
+          String.strip(page_url, ?/) <> "/" <> String.strip(image_url, ?/)
       end
     end)
   end
