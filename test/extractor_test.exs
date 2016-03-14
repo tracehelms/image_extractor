@@ -16,6 +16,14 @@ defmodule ImageExtractor.ExtractorTest do
     end
   end
 
+  test "get_html! follows 301 redirects" do
+    use_cassette "get_html! redirect test" do
+      body = Extractor.get_html!("https://google.com")
+      assert body =~ ~r{Google Search}
+      assert body =~ ~r{I'm Feeling Lucky}
+    end
+  end
+
   test "extract_image_tags will find a single image tag" do
     img_tag = ~s{<img src="http://test.com/test.png" alt="Test image">}
     html = "<div>#{img_tag}</div>"
@@ -49,13 +57,13 @@ defmodule ImageExtractor.ExtractorTest do
     assert Extractor.extract_anchor_tags(html, "http://test.com") == a_tags
   end
 
-  test "extract_anchor_tags only includes child pages on same domain" do
+  test "extract_anchor_tags will get anchor tags from any domain" do
     a_tags = [
       ~s{<a href="http://test.com/test_page">},
       ~s{<a href="http://example.com">}
     ]
     html = "<div>#{a_tags}</div>"
-    assert Extractor.extract_anchor_tags(html, "http://test.com") == [Enum.at(a_tags, 0)]
+    assert Extractor.extract_anchor_tags(html, "http://test.com") == a_tags
   end
 
   test "extract_urls gets urls from images and anchor tags" do
@@ -119,12 +127,8 @@ defmodule ImageExtractor.ExtractorTest do
       site = Repo.get!(ImageExtractor.Site, site.id)
 
       assert site.status == "completed"
-      assert site.images == [
-        "http://test.com/test.png",
-        "https://www.google.com/images/icons/product/chrome-48.png",
-        "https://www.google.com/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png",
-        "https://www.google.com/finance/f/logo_us-115376669.gif"
-      ]
+      assert length(site.images) > 1
+      assert Enum.member?(site.images, "http://test.com/test.png")
     end
   end
 
@@ -142,7 +146,7 @@ defmodule ImageExtractor.ExtractorTest do
     end
   end
 
-  defp load_job_and_site(url \\ "https://www.google.com") do
+  defp load_job_and_site(url \\ "http://tracehelms.com") do
     url = url
     {:ok, job} = Repo.insert(%ImageExtractor.Job{})
     {:ok, site} = Repo.insert(%ImageExtractor.Site{

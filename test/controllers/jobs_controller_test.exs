@@ -9,7 +9,7 @@ defmodule ImageExtractor.JobsControllerTest do
 
   test "adding urls to be crawled", %{conn: conn} do
     use_cassette "adding urls to be crawled" do
-      conn = post(conn, "/jobs", %{urls: ["https://google.com"]})
+      conn = post(conn, "/jobs", %{urls: ["http://example.com"]})
       resp = json_response(conn, 202)
 
       job = List.last(Repo.all(ImageExtractor.Job))

@@ -26,7 +26,12 @@ defmodule ImageExtractor.Extractor do
   end
 
   def get_html!(url) do
-    HTTPotion.get(url).body
+    resp = HTTPotion.get(url)
+    case resp.status_code do
+      200 -> resp.body
+      301 -> get_html!(resp.headers[:location])
+      _ -> resp.body
+    end
   end
 
   def extract_image_tags(content) do
@@ -38,7 +43,6 @@ defmodule ImageExtractor.Extractor do
   def extract_anchor_tags(content, base_url) do
     Regex.scan(~r{<a.*href=".*>}r, content)
     |> List.flatten
-    |> Enum.filter( &String.contains?(&1, base_url))
   end
 
   def extract_urls(tag_list) do

@@ -16,7 +16,10 @@ The `lib/image_extractor/extractor.ex` file is where the bulk of the business lo
 Phoenix and Elixir are pretty new technologies but are very performant. I've been trying to engross myself with Elixir and learn about it, so that's the main reason I chose this language. The ecosystem is still fairly nascent and that gave me a few troubles. I think this would have been easier with Rails and Sidekiq (or similar library). Still, I learned quite a bit and I do think that this implementation is more performant.
 
 ### Handling 301 Redirects
-When crawling a page, if the response is a 301 Redirect, I decided not to continue down that path and crawl it. This is an easy thing to change though. In the `lib/image_extractor/extractor.ex#get_html!` function, you can check if the response if a 301 and then crawl that page instead.
+When crawling a page, if the response is a 301 Redirect, it will follow the redirect and crawl that page normally.
+
+### Handling Other Domains
+When given the URL `http://tracehelms.com` to crawl, the job will consider that page level 1. If links to any outside domains are encountered, such as Twitter, it will crawl that page but Twitter will not get a new "tree". In other words, Twitter will be the second and last level. All of the images for Twitter will be placed under the `http://tracehelms.com` URL in the `/jobs/:id/results` response.
 
 ### Threads For Concurrent Crawling
 Right now for every page that's being crawled, it happens in a new Elixir thread. These threads are very lightweight compared to operating system threads and are the key to concurrency in Elixir. The benefit is that all cores can be utilized to crawl the web pages, making it very performant. The downside is that you don't get retries and persistence of jobs for free like in Sidekiq / Redis. I chose ease of deployment over the robustness of something like Sidekiq and Redis.
@@ -28,7 +31,6 @@ In Elixir, it's common to let threads crash if they are supervised. We would, ho
 
 ### Improvements
 - Error Handling: This wouldn't be a huge task, but would certainly need to be done before considering this production-ready.
-- 301 Redirects: It might be preferred to follow 301 redirects and crawl those pages. As mentioned above, the upgrade path is relatively straight-forward.
 - Marking Site's status as completed: The `Site` object's status gets marked as complete when a crawl past the second level is spawned. Because there is usually more than 1 third level page, this operation happens multiple times. This results in multiple redundant saves to the database. This only needs to happen once.
 - Redis / ETS: Instead of spawning threads to crawl each page, we could add the pages to a queue and pull off of that queue. Something like Redis could be used here. Elixir also has something called Elixir Term Storage (ETS) which we could store our queue in.
 
